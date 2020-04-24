@@ -14,11 +14,11 @@ bool mark = false;
 
 //own SIGINT handlers
 void sigIntHandler(int sig_num){
-    signal(SIGINT, sigIntHandler); 
+    // to podobno nie potrzebne signal(SIGINT, sigIntHandler); 
     printf("parent[%d]: received interrupt, shutting down child processes\n", getpid()); 
     mark = true;
 }
-
+//to powinien byc handler do sigterm
 void sigIntHandlerChild(int sig_num){
     signal(SIGINT, sigIntHandler); 
     printf("child[%d]: interrupted, terminating execution\n", getpid()); 
@@ -37,6 +37,7 @@ void childProcesses(int howMany){
     signal(SIGINT, sigIntHandler); 
     #endif
     // create NUM_CHILD children
+    //tutaj sprawdzic flage, trzymac childy w tablicy i wyslac sigterm kazdemu
     for(int i=0;i<howMany;i++)
     {   
         forkResult = fork();
@@ -44,7 +45,7 @@ void childProcesses(int howMany){
         if(forkResult == 0) 
         { 
             #ifdef WITH_SIGNALS
-            //if mark is set, kill all child processes
+            //if mark is set, kill all child processes to jest zle, musi byc w parencie
             if(mark == true){
                 printf("parent[%d]: creation of child[%d] interrupted\n", getppid(), getpid()); 
                 kill(getpid(), SIGTERM);
@@ -52,7 +53,9 @@ void childProcesses(int howMany){
             //ignore all signals
             signal(SIGINT, SIG_IGN);
             //own SIGINT handler
-            signal(SIGINT, sigIntHandlerChild); 
+            //signal(SIGINT, sigIntHandlerChild); 
+            //signal(SIGTERM, sigIntHandlerChild); //tutaj handler do sigterm trzeba zrobic
+            //spytaj o pytanie na mailu 
             #endif
             printf("child[%d]: identifier of the parent process: %d\n", getpid(), getppid()); 
             //sleep 10 seconds (execution)
